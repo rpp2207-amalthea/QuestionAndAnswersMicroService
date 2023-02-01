@@ -3,7 +3,8 @@ const { expect } = require('chai');
 const request = require('supertest');
 const Pool = require('pg-pool');
 const client = require('../models/QuestionsAndAnswers.js');
-const index = require('../routes/questions.js');
+//const index = require('../routes/questions.js');
+const index = require('../server/index.js');
 const express = require('express');
 const app = express();
 const assert = require('assert');
@@ -24,18 +25,102 @@ app.use("/", index);
 // })
 
 describe('GET /qa/questions', () => {
+  function getQuestions(count) {
+    it ( `should return ${count} questions `, function () {
+      return request(app)
+      .get("/qa/questions")
+      .query({product_id: 1, count:count})
+      .expect('Content-Type', /json/)
+      .expect(200)
+      .then (res => {
+        console.log(`res test is equal to ${JSON.stringify(res.body.results.length)}`);
+        expect(res).to.be.an('object');
+        expect(res.body.results.length).to.equal(Number(count));
+      })
+    })
+  }
   it('should respond with a JSON object', function () {
     return request(app)
-      .get("/")
-      .query({id: 1, count:1})
-      // .expect('Content-Type', /json/)
-      // .expect(200)
+      .get("/qa/questions")
+      .query({product_id: 1, count:1})
+      .expect('Content-Type', /json/)
+      .expect(200)
       .then (res => {
         console.log(`res test is equal to ${JSON.stringify(res.body.results.length)}`);
         expect(res).to.be.an('object');
         expect(res.body.results.length).to.equal(1);
       })
   })
+
+    for (var i = 1 ; i <=5 ; i++) {
+      getQuestions(i);
+    }
+
+})
+
+describe('GET /qa/answers', () => {
+
+  function getAnswers(count) {
+    it ( `should return ${count} answers `, function () {
+      return request(app)
+      .get("/qa/questions/1/answers")
+      .query({product_id: 1, count:count})
+      .expect('Content-Type', /json/)
+      .expect(200)
+      .then (res => {
+        console.log(`res test is equal to ${JSON.stringify(res.body.results.length)}`);
+        expect(res).to.be.an('object');
+        expect(res.body.results.length).to.equal(Number(count));
+      })
+    })
+  }
+  it('should respond with a JSON object', function () {
+    return request(app)
+      .get("/qa/questions/1/answers")
+      .query({product_id: 1, count:1})
+      .expect('Content-Type', /json/)
+      .expect(200)
+      .then (res => {
+        console.log(`res test is equal to ${JSON.stringify(res.body.results.length)}`);
+        expect(res).to.be.an('object');
+        expect(res.body.results.length).to.equal(1);
+      })
+  })
+
+    for (var i = 1 ; i <=5 ; i++) {
+      getAnswers(i);
+    }
+  })
+describe('POST new question', () => {
+  beforeEach( async() => {
+        const pool = new Pool({
+          "database": 'questionsandanswers',
+          "max" : 20,
+          "connectionTimeoutMillis": 0,
+          "idleTimeoutMillis": 0
+        });
+        client.query = (text, values) => {
+                return pool.query ( text, values)
+        }
+  });
+  it('should add a new Question', function () {
+    const payload = {product_id: 1, body: "we are testing our post for questions", name: "supertest", email: "supertest@test.com"}
+    return request(app)
+      .post("/qa/questions")
+      .send(payload)
+      .then ((res) => {
+        return client.query('SELECT * FROM question ORDER BY id DESC LIMIT 1')
+          .then ((result) => {
+            console.log(`result inside test is equal to ${JSON.stringify(result.rows[0])}`)
+          expect(result.rows[0].asker_name).to.equal(payload.name)
+          expect(result.rows[0].body).to.equal(payload.body)
+          expect(result.rows[0].asker_email).to.equal(payload.email)
+          expect(result.rows[0].product_id).to.equal(payload.product_id)
+          })
+      })
+  })
+
+
 })
 // describe ('QnA routes', () => {
 //   before( async() => {

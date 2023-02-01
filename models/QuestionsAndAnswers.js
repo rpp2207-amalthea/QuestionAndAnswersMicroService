@@ -8,7 +8,6 @@ const pool = new Pool({
 });
 
 const getQuestionsQuery = (product_id, limit) => {
-
   var stringifiedID = "'"+product_id+"'";
   return (
     `SELECT json_build_object (
@@ -37,26 +36,26 @@ const getQuestionsQuery = (product_id, limit) => {
               ), '{}'::json )FROM (SELECT * FROM ANSWER WHERE answer.question_id = question.id) AS answer
             )
           )
-         ) FROM (SELECT * FROM question WHERE product_id = ${Number(product_id)} limit ${Number(limit)}) AS question
+         ) FROM (SELECT * FROM question WHERE product_id = ${Number(product_id)} AND reported = false limit ${Number(limit)}) AS question
       )
     )`
   )
 };
 
-const postQuestionsQuery = async (newQuestion) => {
+const postQuestionQuery = async (newQuestion) => {
   return (
     pool.connect().then((client) => {
       return client
       .query (`INSERT INTO question(product_id, body, date_written,asker_name,asker_email,reported,helpful)
-      VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [newQuestion.id, newQuestion.body, newQuestion.name, newQuestion.email])
+      VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [newQuestion.product_id, newQuestion.body, newQuestion.name, newQuestion.email])
       .then ((result) => {
         return result;
       })
     })
   )
 }
+
 const getAnswersQuery =  (question_id, limit) => {
-  console.log(`question id is equal to ${question_id}`);
   var stringifiedID = "'"+question_id+"'";
   return (
     `SELECT json_build_object (
@@ -78,13 +77,61 @@ const getAnswersQuery =  (question_id, limit) => {
                 ),'[]'::json) FROM ( SELECT * FROM photo WHERE photo.answer_id = answer.id) AS photo
             )
           )
-        ) FROM (SELECT * FROM answer WHERE question_id = ${Number(question_id)} limit ${limit}) AS answer
+        ) FROM (SELECT * FROM answer WHERE question_id = ${Number(question_id)} AND reported = false limit ${limit}) AS answer
       )
     )`
   )
 }
 
+const postAnswerQuery = (question_id, newAnswer) => {
+  console.log(`typeof question_id in post answer is equal to ${question_id}`)
+  console.log(`newanswer is equal to ${JSON.stringify(newAnswer)}`)
+  return (
+    pool.connect().then((client) => {
+      return client.query (
+      `INSERT INTO answer(question_id, body, date_written, answerer_name, answerer_email, reported, helpful)
+      VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [Number(question_id), newAnswer.body, newAnswer.name, newAnswer.email]
+      )
+      .then((result) => {
+        console.log(`answer submitted!`)
+        if(newAnswer.url.length !== 0) {
+          client.query ( `INSERT INTO photo ( answer_id, url) VALUES ( $1, $2 )`, [result.rows[0].id, newAnswer.url])
+        }
+      })
+      .then ((result) => {
+        return result;
+      })
+      .catch((err) => {
+        console.log(`err in posting question query : ${err}`)
+      })
+    })
+  )
 
+}
+
+const markQuestionHelpfulQuery = (question_id) => {
+  return (
+        `UPDATE question SET helpful = helpful +1 WHERE id = ${question_id} `
+  )
+}
+
+const markAnswerHelpfulQuery = (answer_id) => {
+  return (
+        `UPDATE answer SET helpful = helpful +1 WHERE id = ${answer_id} `
+  )
+}
+
+const reportQuestionQuery = (question_id) => {
+  return (
+        `UPDATE question SET reported = true WHERE id = ${question_id} `
+  )
+}
+
+const reportAnswerQuery = (answer_id) => {
+  return (
+    `UPDATE answer SET reported = true WHERE id = ${answer_id} `
+  )
+}
 module.exports = {
 
   query: (text,values) => {
@@ -92,14 +139,11 @@ module.exports = {
   },
   getQuestions: async (product_id, limit) => {
     var query = getQuestionsQuery(product_id,limit);
-    //console.log(`question_id is equal to ${product_id}`);
     return pool.connect().then((client) => {
       return client
       .query(query)
       .then((result) => {
-        //console.log(`result for getQuestion is equal to ${JSON.stringify(result.rows[0].json_build_object)}`)
         return result.rows[0].json_build_object
-        //return result.rows
       })
       .catch((err) => {
         console.log(`err in getQuestions is equal to ${err}`);
@@ -124,86 +168,85 @@ module.exports = {
     })
   },
 
+  addAnswer: async(question_id, newAnswer) => {
+    console.log(`question_id is equal to ${JSON.stringify(question_id)}`);
+    postAnswerQuery(question_id, newAnswer)
+    .then((result) => {
+      return result
+    })
+    .catch((err) => {
+      console.log(`err in addAnswer : ${err} `)
+     })
+
+  },
 
   addQuestion: async(question) => {
-    console.log(`question is equal to ${JSON.stringify(question)}`);
-     postQuestionsQuery(question)
+     postQuestionQuery(question)
      .then ((result) => {
-      console.log(`result after adding into db is equal to ${JSON.stringify(result.rows[0].id)}`);
       return result.rows[0].id
      })
      .catch((err) => {
-      console.log(`err in addQuestion `)
+      console.log(`err in addQuestion: ${err}`)
      })
+  },
+
+  markQuestionHelpful: async(question_id) => {
+    var query = markQuestionHelpfulQuery(question_id);
+    return pool.connect().then((client) => {
+      return client
+      .query(query)
+      .then((result) => {
+        return result
+      })
+      .catch((err) => {
+        console.log(`err in markQuestionHelpful is equal to ${err}`);
+        throw(err);
+      })
+    })
+  },
+
+  markAnswerHelpful: async(answer_id) => {
+    var query = markAnswerHelpfulQuery(answer_id);
+    return pool.connect().then((client) => {
+      return client
+      .query(query)
+      .then((result) => {
+        return result
+      })
+      .catch((err) => {
+        console.log(`err in markAnswerHelpful is equal to ${err}`);
+        throw(err);
+      })
+    })
+  },
+
+  reportQuestion: async(question_id) => {
+    var query = reportQuestionQuery(question_id);
+    return pool.connect().then((client) => {
+      return client
+      .query(query)
+      .then((result) => {
+        return result
+      })
+      .catch((err) => {
+        console.log(`err in reportQuestion is equal to ${err}`);
+        throw(err);
+      })
+    })
+  },
+
+  reportAnswer: async(answer_id) => {
+    var query = reportAnswerQuery(answer_id);
+    return pool.connect().then((client) => {
+      return client
+      .query(query)
+      .then((result) => {
+        return result
+      })
+      .catch((err) => {
+        console.log(`err in reportAnswer is equal to ${err}`);
+        throw(err);
+      })
+    })
   }
-// pool.connect().then((client) => {
-//   return client
-//     .query(testQuery)
-//     .then((res) => {
-//       console.log(res.rows[0].questions.results)
-//     })
-//     .catch((err) => {
-//       client.release()
-//       console.log(err.stack)
-//     })
-// })
 }
-
-
-
-//SELECT to_char(to_timestamp(date_written/1000),'YYYY-MM-DD"T"HH24:MI:SS"Z"') from question limit 10;
-
-
-// SELECT json_build_object (
-//   'product_id',1,
-//   'results', (
-//      SELECT json_agg (
-//       json_build_object (
-//         'question id', id,
-//         'question_body', body,
-//         'question_date', date_written,
-//         'asker_name', asker_name,
-//         'question_helpfulness', helpful,
-//         'reported', reported,
-//         'answers',(
-//           SELECT coalesce ( json_object_agg(
-//             id,(
-//               SELECT json_build_object(
-//                 'id',id,
-//                 'body', body,
-//                 'date', ( SELECT to_char(to_timestamp(date_written/1000),'YYYY-MM-DD"T"HH24:MI:SS"Z"')),
-//                 'answerer_name',answerer_name,
-//                 'helpfulness',helpful,
-//                 'photos',(SELECT coalesce (json_agg(url), '[]'::json) FROM photo WHERE photo.answer_id = answer.id)
-//               )
-//             )
-//           ), '{}'::json )FROM ANSWER WHERE answer.question_id = question.id
-//         )
-//       )
-//      ) FROM question where product_id = 1 limit 10
-//   )
-// )
-
-
-// SELECT json_build_object (
-//   'question' , 1,
-//   'results', (
-//     SELECT json_agg (
-//       json_build_object (
-//         'answer_id', id,
-//         'body', body,
-//         'date', ( SELECT to_char(to_timestamp(date_written/1000),'YYYY-MM-DD"T"HH24:MI:SS"Z"')),
-//         'answerer_name', answerer_name,
-//         'helpfulness', helpful,
-//         'photos', (
-//           SELECT coalesce ( json_agg (
-//             json_build_object (
-//               'id', id,
-//               'url', url
-//             )
-//           ), '{}'::json ) FROM photo WHERE photo.answer_id = answer.id
-//         )
-//       )
-//     ) FROM (SELECT * FROM answer WHERE question_id = 1 limit 1) AS answer
-//   )
-// )
