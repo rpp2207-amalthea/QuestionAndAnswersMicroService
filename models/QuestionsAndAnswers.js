@@ -1,10 +1,22 @@
+
+const db = require('../db')
+
 const { Pool } = require('pg');
 
 const pool = new Pool({
+  "host": '127.0.0.1',
+  "user": "andyma",
+  "password": '',
+  "port": 5432,
   "database": 'questionsandanswers',
-  "max" : 20,
-  "connectionTimeoutMillis": 0,
-  "idleTimeoutMillis": 0
+  // "max" : 1000,
+  // "connectionTimeoutMillis": 0,
+  // "idleTimeoutMillis": 0
+});
+
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle client', err)
+  process.exit(-1)
 });
 
 const getQuestionsQuery = (product_id, limit) => {
@@ -44,14 +56,11 @@ const getQuestionsQuery = (product_id, limit) => {
 
 const postQuestionQuery = async (newQuestion) => {
   return (
-    pool.connect().then((client) => {
-      return client
-      .query (`INSERT INTO question(product_id, body, date_written,asker_name,asker_email,reported,helpful)
+    pool.query (`INSERT INTO question(product_id, body, date_written,asker_name,asker_email,reported,helpful)
       VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [newQuestion.product_id, newQuestion.body, newQuestion.name, newQuestion.email])
       .then ((result) => {
         return result;
       })
-    })
   )
 }
 
@@ -84,11 +93,10 @@ const getAnswersQuery =  (question_id, limit) => {
 }
 
 const postAnswerQuery = (question_id, newAnswer) => {
-  console.log(`typeof question_id in post answer is equal to ${question_id}`)
-  console.log(`newanswer is equal to ${JSON.stringify(newAnswer)}`)
+  // console.log(`typeof question_id in post answer is equal to ${question_id}`)
+  // console.log(`newanswer is equal to ${JSON.stringify(newAnswer)}`)
   return (
-    pool.connect().then((client) => {
-      return client.query (
+    pool.query (
       `INSERT INTO answer(question_id, body, date_written, answerer_name, answerer_email, reported, helpful)
       VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [Number(question_id), newAnswer.body, newAnswer.name, newAnswer.email]
       )
@@ -104,7 +112,6 @@ const postAnswerQuery = (question_id, newAnswer) => {
       .catch((err) => {
         console.log(`err in posting question query : ${err}`)
       })
-    })
   )
 
 }
@@ -139,25 +146,21 @@ module.exports = {
   },
   getQuestions: async (product_id, limit) => {
     var query = getQuestionsQuery(product_id,limit);
-    return pool.connect().then((client) => {
-      return client
-      .query(query)
+      return db.query(query)
       .then((result) => {
         return result.rows[0].json_build_object
       })
       .catch((err) => {
         console.log(`err in getQuestions is equal to ${err}`);
         throw(err);
+        //next(err);
       })
-    })
 
   },
 
   getAnswers: async (question_id, limit) => {
     var query = getAnswersQuery(question_id, limit);
-    return pool.connect().then((client) => {
-      return client
-      .query(query)
+    return pool.query(query)
       .then((result) => {
         return result.rows[0].json_build_object
       })
@@ -165,11 +168,10 @@ module.exports = {
         console.log(`err in getAnswer is equal to ${err}`);
         throw(err);
       })
-    })
   },
 
   addAnswer: async(question_id, newAnswer) => {
-    console.log(`question_id is equal to ${JSON.stringify(question_id)}`);
+    //console.log(`question_id is equal to ${JSON.stringify(question_id)}`);
     postAnswerQuery(question_id, newAnswer)
     .then((result) => {
       return result
@@ -192,9 +194,7 @@ module.exports = {
 
   markQuestionHelpful: async(question_id) => {
     var query = markQuestionHelpfulQuery(question_id);
-    return pool.connect().then((client) => {
-      return client
-      .query(query)
+    return pool.query(query)
       .then((result) => {
         return result
       })
@@ -202,14 +202,11 @@ module.exports = {
         console.log(`err in markQuestionHelpful is equal to ${err}`);
         throw(err);
       })
-    })
   },
 
   markAnswerHelpful: async(answer_id) => {
     var query = markAnswerHelpfulQuery(answer_id);
-    return pool.connect().then((client) => {
-      return client
-      .query(query)
+    return pool.query(query)
       .then((result) => {
         return result
       })
@@ -217,14 +214,11 @@ module.exports = {
         console.log(`err in markAnswerHelpful is equal to ${err}`);
         throw(err);
       })
-    })
   },
 
   reportQuestion: async(question_id) => {
     var query = reportQuestionQuery(question_id);
-    return pool.connect().then((client) => {
-      return client
-      .query(query)
+    return pool.query(query)
       .then((result) => {
         return result
       })
@@ -232,14 +226,11 @@ module.exports = {
         console.log(`err in reportQuestion is equal to ${err}`);
         throw(err);
       })
-    })
   },
 
   reportAnswer: async(answer_id) => {
     var query = reportAnswerQuery(answer_id);
-    return pool.connect().then((client) => {
-      return client
-      .query(query)
+    return pool.query(query)
       .then((result) => {
         return result
       })
@@ -247,6 +238,7 @@ module.exports = {
         console.log(`err in reportAnswer is equal to ${err}`);
         throw(err);
       })
-    })
   }
 }
+
+

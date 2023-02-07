@@ -24,6 +24,9 @@ app.use("/", index);
 //     })
 // })
 
+
+
+/****** INTEGRATION TEST*/
 describe('GET /qa/questions', () => {
   function getQuestions(count) {
     it ( `should return ${count} questions `, function () {
@@ -80,8 +83,8 @@ describe('GET /qa/answers', () => {
       .query({product_id: 1, count:1})
       .expect('Content-Type', /json/)
       .expect(200)
-      .then (res => {
-        console.log(`res test is equal to ${JSON.stringify(res.body.results.length)}`);
+      .then ((res) => {
+        console.log(`res test is equal to ${JSON.stringify(res)}`);
         expect(res).to.be.an('object');
         expect(res.body.results.length).to.equal(1);
       })
@@ -119,9 +122,42 @@ describe('POST new question', () => {
           })
       })
   })
-
-
 })
+
+describe('POST new answer', () => {
+  beforeEach( async() => {
+        const pool = new Pool({
+          "database": 'questionsandanswers',
+          "max" : 20,
+          "connectionTimeoutMillis": 0,
+          "idleTimeoutMillis": 0
+        });
+        client.query = (text, values) => {
+                return pool.query ( text, values)
+        }
+  });
+  it('should add a new Answer', function () {
+    const payload = {question_id: 3519017, body: "we are testing our post for answers", name: "supertest", email: "supertest@test.com"}
+    return request(app)
+      .post("/qa/questions/3519017/answers")
+      .send(payload)
+      .then ((res) => {
+        console.log(`res from post answer is equal to ${JSON.stringify(res)}`);
+        return client.query('SELECT * FROM answer ORDER BY id DESC LIMIT 1')
+          .then ((result) => {
+            console.log(`result inside get answer test is equal to ${JSON.stringify(result)}`)
+          expect(result.rows[0].answerer_name).to.equal(payload.name)
+          expect(result.rows[0].body).to.equal(payload.body)
+          expect(result.rows[0].answerer_email).to.equal(payload.email)
+          expect(result.rows[0].question_id).to.equal(payload.question_id)
+          expect(result.rows[0].reported).to.equal(false)
+          expect(result.rows[0].helpful).to.equal(0)
+          })
+      })
+  })
+})
+
+
 // describe ('QnA routes', () => {
 //   before( async() => {
 //     const pool = new Pool({

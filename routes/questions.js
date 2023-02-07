@@ -2,18 +2,19 @@ const express = require ('express');
 const router = express.Router();
 const QuestionsAndAnswers = require('../models/QuestionsAndAnswers.js')
 
-router.get('/', (req,res) => {
-  console.log(`req.body is equal to ${JSON.stringify(req.query)}`)
+router.get('/', (req,res,next) => {
+  //console.log(`req.body is equal to ${JSON.stringify(req.query)}`)
   var product_id = req.query.product_id;
   var limit = req.query.count || 5;
   QuestionsAndAnswers.getQuestions(product_id,limit)
   .then ((result) => {
-    console.log(JSON.stringify(result));
+    //console.log(JSON.stringify(result));
     res.send(result);
   })
   .catch ((err) => {
     console.log(`err while getting question : ${err}`)
-    throw(err)
+    //throw(err)
+    next(err)
   })
 })
 
@@ -21,7 +22,8 @@ router.post('/', (req, res) => {
   console.log(`req.body is equal to ${JSON.stringify(req.body)}`)
   QuestionsAndAnswers.addQuestion(req.body)
   .then ((result) => {
-    res.sendStatus(201);
+    res.status(201)
+    res.send(result);
   })
   .catch((err) => {
     console.log(`err while posting question : ${err}`)
@@ -40,7 +42,7 @@ router.get('/:question_id/answers', (req, res) => {
 
 router.post('/:question_id/answers', (req, res) => {
   var question_id = Number(req.params.question_id);
-  console.log(`question id is equal to ${JSON.stringify(req.params)}`)
+  console.log(`question id to post answer is equal to ${JSON.stringify(req.params)}`)
   QuestionsAndAnswers.addAnswer(question_id, req.body)
   .then((result) => {
     res.sendStatus(201);
