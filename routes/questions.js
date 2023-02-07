@@ -18,7 +18,7 @@ router.get('/', (req,res,next) => {
   })
 })
 
-router.post('/', (req, res) => {
+router.post('/', (req, res,next) => {
   console.log(`req.body is equal to ${JSON.stringify(req.body)}`)
   QuestionsAndAnswers.addQuestion(req.body)
   .then ((result) => {
@@ -27,20 +27,24 @@ router.post('/', (req, res) => {
   })
   .catch((err) => {
     console.log(`err while posting question : ${err}`)
-    throw(err)
+    next(err)
   })
 })
 
-router.get('/:question_id/answers', (req, res) => {
+router.get('/:question_id/answers', (req, res, next) => {
   var question_id = req.params.question_id;
   var limit = req.query.count || 5;
   QuestionsAndAnswers.getAnswers(question_id, limit)
   .then((result) => {
     res.send(result)
   })
+  .catch((err) => {
+    console.log(`err while getting answers : ${err}`)
+    next(err)
+  })
 })
 
-router.post('/:question_id/answers', (req, res) => {
+router.post('/:question_id/answers', (req, res, next) => {
   var question_id = Number(req.params.question_id);
   console.log(`question id to post answer is equal to ${JSON.stringify(req.params)}`)
   QuestionsAndAnswers.addAnswer(question_id, req.body)
@@ -49,8 +53,7 @@ router.post('/:question_id/answers', (req, res) => {
   })
   .catch((err) => {
     console.log(`err while posting answer : ${err}`)
-    res.send(400);
-    throw(err)
+    next(err)
   })
 })
 
@@ -66,7 +69,7 @@ router.put(`/:question_id/helpful`, (req, res) => {
   })
 })
 
-router.put(`/:question_id/report`, (req, res) => {
+router.put(`/:question_id/report`, (req, res,next ) => {
   var question_id = req.params.question_id;
   QuestionsAndAnswers.reportQuestion(question_id)
   .then((result)=> {
@@ -74,7 +77,7 @@ router.put(`/:question_id/report`, (req, res) => {
   })
   .catch((err) => {
     console.log(`err while reporting question as helpful : ${err}`);
-    throw(err)
+    next(err)
   })
 })
 
