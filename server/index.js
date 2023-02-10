@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require ('express');
 const router = express.Router();
 const PORT = process.env.DEV_PORT || 4206;

@@ -1,0 +1,21 @@
+version: '4.16.2'
+
+services:
+  sdc-api:
+    build: .
+    container_name: sdc-api_c
+    ports:
+      - '8080:8080'
+  db:
+    image: postgres:alpine
+    restart: always
+    container_name: sdc-db_c
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 'password'
+      POSTGRES_DB: questionsandanswers
+      PGDATA: /var/lib/postgresql/data/db-files/
+    ports:
+      - '5432:5432'
+    volumes:
+      - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/SDC_CSV:/var/lib/postgresql/data/pgdata

@@ -10,9 +10,22 @@ import {sleep} from 'k6';
 //   http.get('http://127.0.0.1:4206/qa/questions/?product_id=316798');
 //   sleep(1)
 // }
+const requests = () => {
+  let httpRequests = [];
+  for (let i = 900010 ; i < 1000008; i ++ ) {
+    const req = {
+      method:'GET',
+      url:`http://127.0.0.1:4206/qa/questions/?product_id=${i}`
+    }
+    httpRequests.push(req)
+}
+return httpRequests
+}
+
+
 
 export const options = { // add ramp up to avoid excess missing reqs (see stages below)
-  vus: 2000, // corresponds to RPS
+  vus: 100, // corresponds to RPS
   duration: '1m',
   thresholds: {
     http_req_duration: ["avg<2000"], // 95% of requests must complete below 2s, or ave
@@ -21,6 +34,14 @@ export const options = { // add ramp up to avoid excess missing reqs (see stages
 };
 
 export default function () {
-  http.get('http://127.0.0.1:4206/qa/questions/?product_id=317867');
+  let httpRequests = [];
+  for (let i = 900010 ; i < 1000008; i ++ ) {
+    const req = {
+      method:'GET',
+      url:`http://127.0.0.1:4206/qa/questions/?product_id=${i}`
+    }
+    httpRequests.push(req)
+}
+  http.batch(httpRequests)
   sleep(1)
 }

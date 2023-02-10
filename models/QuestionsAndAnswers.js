@@ -1,14 +1,21 @@
-
+require('dotenv').config()
 const db = require('../db')
 
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  "host": '127.0.0.1',
-  "user": "andyma",
-  "password": '',
-  "port": 5432,
-  "database": 'questionsandanswers',
+  // "host": '127.0.0.1',
+  // "user": "andyma",
+  // "password": '',
+  // "port": 5432,
+  // "database": 'questionsandanswers',
+  "host": process.env.DB_HOST,
+  "user": process.env.DB_USER,
+  "password": process.env.DB_PASSWORD,
+  "port": process.env.DB_PORT,
+  "database": process.env.DB_DATABASE,
+
+
   // "max" : 1000,
   // "connectionTimeoutMillis": 0,
   // "idleTimeoutMillis": 0

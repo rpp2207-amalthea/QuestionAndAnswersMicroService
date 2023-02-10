@@ -1,14 +1,13 @@
 const { Pool } = require('pg')
+require('dotenv').config('../.env')
 
+console.log(`dbtest is equal to ${process.env.DB_DATABASE}`)
 const pool = new Pool({
-  "host": '127.0.0.1',
-  "user": "andyma",
-  "password": '',
-  "port": 5432,
-  "database": 'questionsandanswers',
-  "max" : 1000,
-  "connectionTimeoutMillis": 0,
-  "idleTimeoutMillis": 0
+  "host": process.env.DB_HOST,
+  "user": process.env.DB_USER,
+  "password": process.env.DB_PASSWORD,
+  "port": process.env.DB_PORT,
+  "database":process.env.DB_DATABASE,
 });
 
 module.exports = {
