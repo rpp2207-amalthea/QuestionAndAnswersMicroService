@@ -11,7 +11,7 @@ services:
     restart: always
     container_name: sdc-db_c
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: andyma
       POSTGRES_PASSWORD: 'password'
       POSTGRES_DB: questionsandanswers
       PGDATA: /var/lib/postgresql/data/db-files/
