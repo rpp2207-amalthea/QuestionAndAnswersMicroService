@@ -19,3 +19,4 @@ services:
       - '5432:5432'
     volumes:
       - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/SDC_CSV:/var/lib/postgresql/data/pgdata
+      - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/CreateQATables.sql:/docker-entrypoint-initdb.d/1-init.sql

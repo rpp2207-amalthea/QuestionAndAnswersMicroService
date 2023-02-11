@@ -1,6 +1,7 @@
 const express = require ('express');
 const index = require('./index.js');
-const PORT = process.env.DEV_PORT || 4206;
+//const PORT = process.env.DEV_PORT || 4206;
+const PORT =8080;
 const app = express ();
 
 app.use(express.json())

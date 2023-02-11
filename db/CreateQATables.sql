@@ -34,4 +34,12 @@ CREATE INDEX question_id_idx ON question(id);
 CREATE INDEX answer_question_id_idx ON answer(question_id);
 CREATE INDEX photo_answer_id_idx ON photo(answer_id);
 
-GRANT ALL PRIVILEGES ON DATABASE docker TO docker;
+\COPY question from '/var/lib/postgresql/data/pgdata/questions.csv' DELIMITER ',' CSV HEADER;
+
+\COPY answer from '/var/lib/postgresql/data/pgdata/answers.csv' DELIMITER ',' CSV HEADER;
+
+\COPY photo from '/var/lib/postgresql/data/pgdata/answers_photos.csv' DELIMITER ',' CSV HEADER;
+
+SELECT setval('question_id_seq', (SELECT MAX(id) from question));
+SELECT setval('answer_id_seq', (SELECT MAX(id) from answer));
+SELECT setval('photo_id_seq', (SELECT MAX(id) from photo));

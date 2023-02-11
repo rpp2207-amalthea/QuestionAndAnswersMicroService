@@ -3,10 +3,10 @@ require('dotenv').config('../.env')
 
 console.log(`dbtest is equal to ${process.env.DB_DATABASE}`)
 const pool = new Pool({
-  "host": process.env.DB_HOST,
-  "user": process.env.DB_USER,
-  "password": process.env.DB_PASSWORD,
-  "port": process.env.DB_PORT,
+  "host": 'sdc-db_c',
+  "user": 'postgres',
+  "password": 'password',
+  "port": 5432,
   "database":process.env.DB_DATABASE,
 });
 
