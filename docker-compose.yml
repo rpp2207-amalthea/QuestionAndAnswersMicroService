@@ -1,3 +1,4 @@
+# this is set up for dockerizing just the server
 version: '4.16.2'
 
 services:
@@ -6,3 +7,51 @@ services:
     container_name: sdc-api_c
     ports:
       - '8080:8080'
+
+#this is for dockerizing just the db
+
+#version: '4.16.2'
+# services:
+#   sdc-api:
+#     build: .
+#     container_name: sdc-api_c
+#     ports:
+#       - '8080:8080'
+#   db:
+#     image: postgres:alpine
+#     restart: always
+#     container_name: sdc-db_c
+#     environment:
+#       POSTGRES_USER: andyma
+#       POSTGRES_PASSWORD: 'password'
+#       POSTGRES_DB: questionsandanswers
+#       PGDATA: /var/lib/postgresql/data/db-files/
+#     ports:
+#       - '5432:5432'
+#     volumes:
+#       - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/SDC_CSV:/var/lib/postgresql/data/pgdata
+#       - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/CreateQATables.sql:/docker-entrypoint-initdb.d/1-init.sql
+
+# this is for dockerizing both the server and db
+
+#version: '4.16.2'
+# services:
+#   sdc-api:
+#     build: .
+#     container_name: sdc-api_c
+#     ports:
+#       - '8080:8080'
+#   db:
+#     image: postgres:alpine
+#     restart: always
+#     container_name: sdc-db_c
+#     environment:
+#       POSTGRES_USER: andyma
+#       POSTGRES_PASSWORD: 'password'
+#       POSTGRES_DB: questionsandanswers
+#       PGDATA: /var/lib/postgresql/data/db-files/
+#     ports:
+#       - '5432:5432'
+#     volumes:
+#       - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/SDC_CSV:/var/lib/postgresql/data/pgdata
+#       - /Users/andyma/Desktop/Hack Reactor Sprints/QuestionAndAnswersMicroService/db/CreateQATables.sql:/docker-entrypoint-initdb.d/1-init.sql

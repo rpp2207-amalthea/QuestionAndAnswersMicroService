@@ -1,30 +1,30 @@
 require('dotenv').config()
 const db = require('../db')
 
-const { Pool } = require('pg');
+// const { Pool } = require('pg');
 
-const pool = new Pool({
-  // "host": '127.0.0.1',
-  // "user": "andyma",
-  // "password": '',
-  // "port": 5432,
-  // "database": 'questionsandanswers',
-  "host": process.env.DB_HOST,
-  "user": process.env.DB_USER,
-  "password": process.env.DB_PASSWORD,
-  "port": process.env.DB_PORT,
-  "database": process.env.DB_DATABASE,
+// const pool = new Pool({
+//   // "host": '127.0.0.1',
+//   // "user": "andyma",
+//   // "password": '',
+//   // "port": 5432,
+//   // "database": 'questionsandanswers',
+//   "host": process.env.DB_HOST,
+//   "user": process.env.DB_USER,
+//   "password": process.env.DB_PASSWORD,
+//   "port": process.env.DB_PORT,
+//   "database": process.env.DB_DATABASE,
 
 
-  // "max" : 1000,
-  // "connectionTimeoutMillis": 0,
-  // "idleTimeoutMillis": 0
-});
+//   // "max" : 1000,
+//   // "connectionTimeoutMillis": 0,
+//   // "idleTimeoutMillis": 0
+// });
 
-pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client', err)
-  process.exit(-1)
-});
+// pool.on('error', (err, client) => {
+//   console.error('Unexpected error on idle client', err)
+//   process.exit(-1)
+// });
 
 const getQuestionsQuery = (product_id, limit) => {
   var stringifiedID = "'"+product_id+"'";
@@ -63,7 +63,7 @@ const getQuestionsQuery = (product_id, limit) => {
 
 const postQuestionQuery = async (newQuestion) => {
   return (
-    pool.query (`INSERT INTO question(product_id, body, date_written,asker_name,asker_email,reported,helpful)
+    db.query (`INSERT INTO question(product_id, body, date_written,asker_name,asker_email,reported,helpful)
       VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [newQuestion.product_id, newQuestion.body, newQuestion.name, newQuestion.email])
       .then ((result) => {
         return result;
@@ -103,7 +103,7 @@ const postAnswerQuery = (question_id, newAnswer) => {
   // console.log(`typeof question_id in post answer is equal to ${question_id}`)
   // console.log(`newanswer is equal to ${JSON.stringify(newAnswer)}`)
   return (
-    pool.query (
+    db.query (
       `INSERT INTO answer(question_id, body, date_written, answerer_name, answerer_email, reported, helpful)
       VALUES ( $1, $2, (SELECT extract(epoch FROM  now()) * 1000), $3, $4, false, 0) RETURNING id`, [Number(question_id), newAnswer.body, newAnswer.name, newAnswer.email]
       )
@@ -148,9 +148,9 @@ const reportAnswerQuery = (answer_id) => {
 }
 module.exports = {
 
-  query: (text,values) => {
-    return pool.query(text, values);
-  },
+  // query: (text,values) => {
+  //   return pool.query(text, values);
+  // },
   getQuestions: async (product_id, limit) => {
     var query = getQuestionsQuery(product_id,limit);
       return db.query(query)
@@ -167,7 +167,7 @@ module.exports = {
 
   getAnswers: async (question_id, limit) => {
     var query = getAnswersQuery(question_id, limit);
-    return pool.query(query)
+    return db.query(query)
       .then((result) => {
         return result.rows[0].json_build_object
       })
@@ -201,7 +201,7 @@ module.exports = {
 
   markQuestionHelpful: async(question_id) => {
     var query = markQuestionHelpfulQuery(question_id);
-    return pool.query(query)
+    return db.query(query)
       .then((result) => {
         return result
       })
@@ -213,7 +213,7 @@ module.exports = {
 
   markAnswerHelpful: async(answer_id) => {
     var query = markAnswerHelpfulQuery(answer_id);
-    return pool.query(query)
+    return db.query(query)
       .then((result) => {
         return result
       })
@@ -225,7 +225,7 @@ module.exports = {
 
   reportQuestion: async(question_id) => {
     var query = reportQuestionQuery(question_id);
-    return pool.query(query)
+    return db.query(query)
       .then((result) => {
         return result
       })
@@ -237,7 +237,7 @@ module.exports = {
 
   reportAnswer: async(answer_id) => {
     var query = reportAnswerQuery(answer_id);
-    return pool.query(query)
+    return db.query(query)
       .then((result) => {
         return result
       })
