@@ -1,7 +1,7 @@
 const { Pool } = require('pg')
 require('dotenv').config('../.env')
 
-console.log(`dbtest is equal to ${process.env.DB_DATABASE}`)
+//console.log(`dbtest is equal to ${process.env.DB_DATABASE}`)
 // this pool is for local
 // const pool = new Pool({
 //   "host": process.env.DB_HOST,
